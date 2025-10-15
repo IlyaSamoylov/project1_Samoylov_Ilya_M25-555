@@ -1,0 +1,17 @@
+# Виртуальное окружение Poetry
+.venv/
+
+# Собранные дистрибутивы
+dist/
+build/
+*.egg-info/
+
+# Кэш Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Файлы IDE
+.vscode/
+.idea/
