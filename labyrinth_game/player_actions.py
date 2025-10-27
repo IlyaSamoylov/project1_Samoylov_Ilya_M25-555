@@ -1,5 +1,6 @@
-from labyrinth_game.constants import ROOMS
 import labyrinth_game.utils as utils
+from labyrinth_game.constants import ROOMS
+
 
 def show_inventory(game_state):
     '''
@@ -11,7 +12,7 @@ def show_inventory(game_state):
     if game_state['player_inventory']:
         print(f"Инвентарь: {game_state['player_inventory']}")
     else:
-        print(f"В инвентаре хоть шаром покати...")
+        print("В инвентаре хоть шаром покати...")
 
 def get_input(prompt="> "):
     '''
@@ -43,8 +44,18 @@ def move_player(game_state, direction):
     # если выход в том направлении существует
     if direction in current_room_dict['exits']:
         new_room_name = current_room_dict['exits'][direction] # новая комната
+        if new_room_name == 'treasure_room':
+            if 'rusty_key' not in game_state['player_inventory']:
+                print("Дверь заперта. Нужен ключ, чтобы пройти дальше.")
+                return
+            else:
+                print("Вы используете найденный ключ, чтобы открыть путь в комнату "
+                      "сокровищ.")
+
         game_state['current_room'] = new_room_name # обновить комнату в game_state
         game_state['steps_taken'] += 1 # увеличить на один число шагов
+
+        utils.random_event(game_state)
 
         utils.describe_current_room(game_state) # описать новую комнату
 
@@ -61,8 +72,8 @@ def take_item(game_state, item_name):
     Иначе: выводит "Такого предмета здесь нет"
 
     Parameters:
-        game_state - состояние игры
-        item_name - название предмета для взаимодействия
+        game_state: dict, словарь игрового состояния
+        item_name: str, название предмета для взаимодействия
     '''
     cur_room_dict = ROOMS[game_state['current_room']] #словарь текущей комнаты из ROOMS
 
@@ -70,16 +81,22 @@ def take_item(game_state, item_name):
         print('Сундук слишком тяжелый, его не сдвинуть')
     elif item_name in cur_room_dict['items']:
         game_state['player_inventory'].append(item_name) # добавить предмет в инвентарь
-        ROOMS[game_state['current_room']]['items'].remove(item_name) # удалить предмет из комнаты в ROOMS
+        # удалить предмет из комнаты в ROOMS
+        ROOMS[game_state['current_room']]['items'].remove(item_name)
         print(f'Вы подняли: {item_name}')
     else:
-        print(f'Такого предмета здесь нет')
+        print('Такого предмета здесь нет')
 
 def use_item(game_state, item_name):
     '''
-    Функция для использования предмета:
+    Функция использования предмета:
 
-    TODO: перепроверить логику функции и дописать docstring
+    Args:
+        game_state: dict, словарь игрового состояния
+        item_name: str, название предмета для использования
+
+    Returns:
+
     '''
     if item_name not in game_state['player_inventory']:
         print("У вас нет такого предмета.")
@@ -97,6 +114,7 @@ def use_item(game_state, item_name):
                 if 'rusty_key' not in game_state['player_inventory']:
                     game_state['player_inventory'].append('rusty_key')
                     print("Внутри вы нашли Ржавый ключ!")
+                    game_state['player_inventory'].remove('bronze_box')
                 else:
                     print("Шкатулка пуста.")
 
