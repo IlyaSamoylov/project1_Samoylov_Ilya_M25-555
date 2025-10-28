@@ -52,12 +52,13 @@ def solve_puzzle(game_state):
         print(f"Ваш ответ: {user_answer}")
         if user_answer in correct_answer:
             print("Правильно")
+            print(f"В награду вы получаете: {reward}")
 
             cur_room_dict['puzzle'] = None
 
             # должна ли функция возвращать game_state?
             # Нехорошо же функцией изменять переменную
-            game_state['player_inventory'].append(reward)
+            game_state['player_inventory'].extend(reward)
 
         else:
             if cur_room_name == 'trap_room':
