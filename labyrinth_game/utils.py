@@ -1,13 +1,20 @@
 import math
 
-from labyrinth_game.constants import ROOMS
+from labyrinth_game.constants import (
+    RAND_EVENT_RANGE,
+    RAND_EVENT_THRESHOLD,
+    ROOMS,
+    SCENARIO_RANGE,
+    TRAP_DMG_RANGE,
+    TRAP_DMG_THRESHOLD,
+)
 
 
 def describe_current_room(game_state):
     '''
     Функция для описания текущей комнаты
 
-    Parameters:
+    Args:
         game_state: dict, словарь игрового состояния
     '''
     cur_room_name = game_state['current_room'] # название комнаты
@@ -23,10 +30,12 @@ def describe_current_room(game_state):
 def show_help(commands):
     '''
     Функция выводит справку доступных команд
+
+    Args:
+        commands: dict, словарь доступных команд и их описания
     '''
     print("\nДоступные команды:")
     for command, description in commands.items():
-        # Форматируем строку: команда занимает 16 символов, выровнена по левому краю
         print(f"  {command:<16} - {description}")
 
 def solve_puzzle(game_state):
@@ -35,22 +44,22 @@ def solve_puzzle(game_state):
     в комнате. Иначе выводит вопрос и получает ответ с консоли. Если ответ правильный
     - удаляет загадку из комнаты и награждает игрока, иначе - выводит сообщение.
 
-    Parameters:
+    Args:
         game_state: dict, словарь игрового состояния
     '''
-    cur_room_name = game_state['current_room']
-    cur_room_dict = ROOMS[cur_room_name]
+    cur_room_name = game_state['current_room']   # название комнаты
+    cur_room_dict = ROOMS[cur_room_name]    # словарь текущей комнаты из ROOMS
 
     if not cur_room_dict['puzzle']:
         print("Загадок здесь нет")
 
     else:
-        # Выводим вопрос и получаем ответ
+        # выводим вопрос, получаем ответ и сравниваем с правильным
         question, correct_answer, reward = cur_room_dict['puzzle']
         print(f"\n{question}")
         user_answer = input()
         print(f"Ваш ответ: {user_answer}")
-        if user_answer in correct_answer:
+        if user_answer in correct_answer:   # если ответ верен
             print("Правильно")
             print(f"В награду вы получаете: {reward}")
 
@@ -60,8 +69,8 @@ def solve_puzzle(game_state):
             # Нехорошо же функцией изменять переменную
             game_state['player_inventory'].extend(reward)
 
-        else:
-            if cur_room_name == 'trap_room':
+        else:   # если игрок ошибся
+            if cur_room_name == 'trap_room':    # для комнаты с ловушками
                 trigger_trap(game_state)
                 return
             print("\nНеверно. Попробуйте снова (solve).")
@@ -78,21 +87,20 @@ def attempt_open_treasure(game_state):
     Returns:
         dict: Обновленное состояние игры
     """
-    current_room_name = game_state['current_room']
-    current_room = ROOMS[current_room_name]
+    current_room_name = game_state['current_room']   # название комнаты
+    current_room_dict = ROOMS[current_room_name]    # словарь текущей комнаты из ROOMS
 
     # сценарий 1: у игрока есть ключ
-    # treasure_key или rusty_key?
     if  'treasure_key' in game_state['player_inventory']:
         print("Вы делаете поворот ключом и замок щёлкает. Сундук открыт!")
-
         print("В сундуке сокровище! Вы победили!")
-        game_state['game_over'] = True
+
+        game_state['game_over'] = True  # конец игры
 
     # сценарий 2: попытка взлома кодом
     else:
         print("Сундук заперт. У вас нет ключа, но есть возможность ввести код.")
-        print(f'Загадка на сундуке: {current_room['puzzle'][0]}')
+        print(f'Загадка на сундуке: {current_room_dict['puzzle'][0]}')
 
         choice = input("Ввести код? (да/нет): ").strip().lower()
 
@@ -100,11 +108,11 @@ def attempt_open_treasure(game_state):
             code = input("Введите код: ").strip()
 
             # проверка кода
-            if code in current_room['puzzle'][1]:
+            if code in current_room_dict['puzzle'][1]:
                 print("Код верный! Сундук открыт.")
                 print("В сундуке сокровище! Вы победили!")
 
-                game_state['game_over'] = True
+                game_state['game_over'] = True  # конец игры
             else:
                 print("Неверный код. Сундук не открылся.")
         else:
@@ -128,26 +136,29 @@ def pseudo_random(seed, modulo):
 def trigger_trap(game_state):
     '''
     Функции срабатывания ловушки. Если инвентарь пуст - с помощью генератора чисел
-    выбирается урон. Если он больше или равен threshold, игра окончена.
+    выбирается урон. Если он больше или равен THRESHOLD, игра окончена.
     Если меньше - игрок выживает. Если в инвентаре были предметы - случайный удаляется.
     Args:
         game_state (dict): Текущее состояние игры
-
-    Returns:
-
     '''
-    threshold = 6
+
     print("Ловушка активирована, пол стал дрожжать")
 
+    # если в инвентаре что-то есть
     if game_state['player_inventory']:
         missing_item_idx = pseudo_random(game_state['steps_taken'],
                                          len(game_state['player_inventory']))
+
         print(f'{game_state['player_inventory'][missing_item_idx]} безвозвратно утерян')
-        game_state['player_inventory'].pop(missing_item_idx)
-    else:
-        injure = pseudo_random(game_state['steps_taken'], 11)
+        game_state['player_inventory'].pop(missing_item_idx)    # удалить случайный item
+
+    else:   # если инвентарь пуст
+
+        # получаемый урон
+        injure = pseudo_random(game_state['steps_taken'], TRAP_DMG_RANGE)
+
         print(f'Урон = {injure}')
-        if injure <= threshold:
+        if injure <= TRAP_DMG_THRESHOLD:
             print("Удача, вы смогли уцелеть!")
         else:
             print("Ловушка захлопнулась. К сожалению, это конец")
@@ -160,15 +171,11 @@ def random_event(game_state):
     один из трех сценариев.
     Args:
         game_state (dict): Текущее состояние игры
-
-    Returns:
-
     '''
-    threshold = 7
-    event_prob = pseudo_random(game_state['steps_taken'], 11)
+    event_prob = pseudo_random(game_state['steps_taken'], RAND_EVENT_RANGE)
 
-    if event_prob < threshold:
-        event_scenario = pseudo_random(game_state['steps_taken'], 3)
+    if event_prob < RAND_EVENT_THRESHOLD:
+        event_scenario = pseudo_random(game_state['steps_taken'], SCENARIO_RANGE)
         match event_scenario:
             case 0:
                 print("Что это блестит? Монета!")
@@ -184,6 +191,3 @@ def random_event(game_state):
                     'torch' not in game_state['player_inventory']:
                     print("Осторожно, ловушки!")
                     trigger_trap(game_state)
-
-
-# TODO: разобраться с treasure key - его нигде нет
