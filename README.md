@@ -99,3 +99,6 @@
 ├──── player_actions.py    # Действия игрока 
 └── utils.py            # Вспомогательные функции
 ```
+
+ ## Запись пробной сессии:
+ [![asciicast](https://asciinema.org/a/wqCiCFR6PSyp3TW02F82w1W8X.svg)](https://asciinema.org/a/wqCiCFR6PSyp3TW02F82w1W8X)
