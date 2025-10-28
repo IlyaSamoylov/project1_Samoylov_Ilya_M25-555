@@ -6,7 +6,7 @@ def show_inventory(game_state):
     '''
     Функция для вывода предметов в инвентаре либо сообщения, что он пуст
 
-    Parameters:
+    Args:
         game_state: dict, словарь состояния игры
     '''
     if game_state['player_inventory']:
@@ -18,7 +18,7 @@ def get_input(prompt="> "):
     '''
     Функция возвращает ввод игрока, в случае ошибки ввода заканчивает игру
 
-    Parameters:
+    Args:
         prompt="> "
     '''
     try:
@@ -34,33 +34,36 @@ def move_player(game_state, direction):
         Изменяет текущую комнату и число пройденных шагов в game_state либо
         выводит сообщение, что это направление недоступно
 
-    Parameters:
+    Args:
         game_state: dict, словарь игрового состояния
         direction: str, доступная из текущей комнаты сторона света, куда передвигаться
     '''
     current_room_name = game_state['current_room'] # название текущей комнаты
     current_room_dict = ROOMS[current_room_name] # словарь для текущей комнаты из ROOMS
 
-    # если выход в том направлении существует
-    if direction in current_room_dict['exits']:
-        new_room_name = current_room_dict['exits'][direction] # новая комната
+    # если выхода в том направлении нет
+    if direction not in current_room_dict['exits']:
+        print("Нельзя пойти в этом направлении.")
+    # если есть
+    else:
+        new_room_name = current_room_dict['exits'][direction]  # новая комната
+        # для комнаты сокровищ
         if new_room_name == 'treasure_room':
-            if 'rusty_key' not in game_state['player_inventory']:
-                print("Дверь заперта. Нужен ключ, чтобы пройти дальше.")
-                return
-            else:
+            # если ржавый ключ подобран - можно пройти
+            if 'rusty_key' in game_state['player_inventory']:
                 print("Вы используете найденный ключ, чтобы открыть путь в комнату "
                       "сокровищ.")
+            # иначе дверь заперта и переход неудался
+            else:
+                print("Дверь заперта. Нужен ключ, чтобы пройти дальше.")
+                return
 
-        game_state['current_room'] = new_room_name # обновить комнату в game_state
-        game_state['steps_taken'] += 1 # увеличить на один число шагов
+        game_state['current_room'] = new_room_name
+        game_state['steps_taken'] += 1
 
-        utils.random_event(game_state)
+        utils.random_event(game_state)  # вызвать случайное событие
 
-        utils.describe_current_room(game_state) # описать новую комнату
-
-    else:
-        print("Нельзя пойти в этом направлении.")
+        utils.describe_current_room(game_state)  # описать новую комнату
 
 def take_item(game_state, item_name):
     '''
@@ -71,7 +74,7 @@ def take_item(game_state, item_name):
      - выводит либо сообщение о том, что предмет поднят
     Иначе: выводит "Такого предмета здесь нет"
 
-    Parameters:
+    Args:
         game_state: dict, словарь игрового состояния
         item_name: str, название предмета для взаимодействия
     '''
@@ -94,9 +97,6 @@ def use_item(game_state, item_name):
     Args:
         game_state: dict, словарь игрового состояния
         item_name: str, название предмета для использования
-
-    Returns:
-
     '''
     if item_name not in game_state['player_inventory']:
         print("У вас нет такого предмета.")
@@ -105,6 +105,9 @@ def use_item(game_state, item_name):
         match item_name:
             case 'torch':
                 print("Тьма расступается перед светом факела.")
+
+            case 'candle':
+                print('Свеча мягко освещает вам путь')
 
             case 'sword':
                 print("Меч тяжелый, но с ним вы чувствуете себя увереннее")
@@ -120,6 +123,3 @@ def use_item(game_state, item_name):
 
             case _:
                 print(f"Вы не знаете, как использовать {item_name}.")
-
-# TODO: приделать функциям вместо изменения game_state как глобальной переменной
-#  возвращение нового состояния через return
