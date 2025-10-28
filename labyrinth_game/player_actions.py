@@ -106,6 +106,9 @@ def use_item(game_state, item_name):
             case 'torch':
                 print("Тьма расступается перед светом факела.")
 
+            case 'candle':
+                print('Свеча мягко освещает вам путь')
+
             case 'sword':
                 print("Меч тяжелый, но с ним вы чувствуете себя увереннее")
 
@@ -120,6 +123,3 @@ def use_item(game_state, item_name):
 
             case _:
                 print(f"Вы не знаете, как использовать {item_name}.")
-
-# TODO: приделать функциям вместо изменения game_state как глобальной переменной
-#  возвращение нового состояния через return
